@@ -73,6 +73,13 @@ allowed-tools:
 | 信号 | 判定 |
 |------|------|
 | 描述包含 "修复" / "fix" / "bug" / "hotfix" | S |
+
+**S 级范围限制（直接命中原则）：**
+- S 级修复必须限定在「直接命中的模块」内，不扩展到关联模块
+- 例：修复「用户列表翻页 bug」→ 只改列表页组件，不改详情页
+- 如果分析发现需要跨模块改动（如改 list 同时要改 detail），自动升级为 M 级
+- 判断标准：涉及文件超过 3 个，或涉及 2 个以上独立功能模块 → 升级
+
 | 涉及多个新 DB 表（2+） | L |
 | 描述包含 "模块" / "系统" / "Phase" / "引擎" | L |
 
@@ -184,6 +191,17 @@ allowed-tools:
 
 **基于 `<base-branch>` 分支创建，PR 目标为 `<base-branch>`。永远不直接 commit 到保护分支。**
 
+**[预检查] 工作区状态验证：**
+
+在创建分支前，必须检查当前工作区是否干净：
+```bash
+git diff --quiet && git diff --cached --quiet
+```
+- 如果有未提交的改动 → **中止流程**，向用户报告哪些文件有未提交改动
+- 询问用户：「检测到未提交的改动，是否先 stash 后继续？还是中止？」
+- 用户选择 stash → `git stash` 后继续，BUILD 完成后提醒用户 `git stash pop`
+- 用户选择中止 → 停止整个 pipeline
+
 ```bash
 git checkout <base-branch>
 git pull origin <base-branch>
@@ -193,6 +211,11 @@ git checkout -b feat/<topic>
 ### 4.2 Agent Team 编排
 
 <!-- CUSTOMIZE: 根据项目技术栈调整 agent 角色名和职责 -->
+
+**[S 级范围验证]** 如果是 S 级需求，在派发 Agent 前检查：
+- task_plan.md 中涉及的文件数是否 <= 3
+- 所有改动是否集中在同一功能模块
+- 如果超出 → 向用户报告并建议升级为 M 级，等待确认后再继续
 
 根据规模创建 Team 和分派 Agent：
 
@@ -262,6 +285,22 @@ TeamCreate("feature-<topic>")
 - 3 次后仍未通过 → 向用户报告问题，请求人工介入
 
 ### 4.5 生成 PR
+
+**[预检查] Remote 和分支验证：**
+
+```bash
+# 1. 确认 origin 指向预期仓库
+REMOTE_URL=$(git remote get-url origin)
+echo "将创建 PR 到: $REMOTE_URL"
+
+# 2. 确认 base branch 存在于 remote
+git ls-remote --heads origin <base-branch> > /dev/null 2>&1 || echo "ERROR: <base-branch> 分支不存在于 remote"
+
+# 3. 推送 feature branch
+git push origin <branch-name> --force-with-lease
+```
+
+如果任何检查失败，中止 PR 创建并报告具体错误。向用户确认 remote URL 是否正确后再继续。
 
 ```bash
 gh pr create --base <base-branch> --title "<type>: <简短描述>" --body "<PR 描述>"
