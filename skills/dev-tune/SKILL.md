@@ -115,25 +115,25 @@ git commit -m "fix(workflow): <具体改了什么>"
 
 ### Step 6: 同步通用仓库
 
-如果本次修改涉及通用内容（分级逻辑、pipeline 流程、quality gate 规则、agent 协作规则），而非项目特定内容（具体技术栈、文件路径），则同步到通用仓库。
+如果本次修改涉及**通用内容**（分级逻辑、pipeline 流程、quality gate 规则、agent 协作规则），同步到通用仓库。
 
 **判断标准：**
-- 通用内容：S/M/L 分级信号词、审批节点数量、quality gate 触发条件、agent 派发规则、pipeline 阶段行为
-- 项目特定：具体技术栈引用、具体文件路径、具体 agent 角色技术细节
+- 通用（需同步）：S/M/L 分级信号词、审批节点数量、quality gate 触发条件、agent 派发规则、pipeline 阶段行为
+- 项目特定（不同步）：具体技术栈引用、具体文件路径、agent 角色技术细节
 
 **同步流程：**
-1. 读取通用仓库对应文件（`~/Works/Project/agent-dev-workflow/`）
-2. 将通用改动泛化后写入（去掉项目特定引用，保持 `<placeholder>` 风格）
-3. 提交并推送：
-```bash
-cd ~/Works/Project/agent-dev-workflow
-git add -A
-git commit -m "fix(workflow): <具体改了什么>"
-git push
-```
-4. 通知用户："已同步到 agent-dev-workflow 仓库"
+1. 读取通用仓库目录中对应文件（默认路径：`~/Works/Project/agent-dev-workflow/`，可在安装时自定义）
+2. 将改动泛化：去掉项目特定引用，保持 `<placeholder>` 风格
+3. 写入并提交推送：
+   ```bash
+   cd <通用仓库路径>
+   git add -A
+   git commit -m "fix(workflow): <具体改了什么>"
+   git push
+   ```
+4. 通知用户："已同步到通用仓库"
 
-**如果改动纯属项目特定，跳过此步。**
+**如果改动纯属项目特定，跳过此步并说明原因。**
 
 ---
 
