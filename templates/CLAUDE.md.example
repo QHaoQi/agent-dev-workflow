@@ -1,0 +1,60 @@
+# 开发工作流 — CLAUDE.md 模板
+
+> 将以下内容合并到你项目的 CLAUDE.md 中。
+> `<!-- CUSTOMIZE -->` 标记的地方需要根据项目实际情况修改。
+
+---
+
+## 开发工作流
+
+所有开发通过 `/dev <需求>` 一键启动。
+
+<!-- CUSTOMIZE: 如果你有 design spec 文档，在下面添加路径引用 -->
+
+### 分级规则
+
+<!-- CUSTOMIZE: 根据项目实际情况调整 LOC 阈值和文件数 -->
+
+| 规模 | 判断标准 | 用户审批节点 | Agent 数 |
+|------|---------|-------------|---------|
+| **S** | bug fix / < 100 LOC / 1-3 文件 / 单层 | approve PR | 1 |
+| **M** | 单功能 / 100-500 LOC / 前后端联动 | approve spec + PR | 2 |
+| **L** | 多模块 / 500+ LOC / 前后端 + DB + 测试 | approve spec + plan + PR | 3 |
+
+拿不准往大一级分。用户可随时覆盖：`/dev -s` / `/dev -m` / `/dev -l`。
+
+### 质量门禁
+
+<!-- CUSTOMIZE: 根据项目已安装的 gstack skills 调整 -->
+<!-- 如果没有安装某个 skill，从表中删除对应行 -->
+
+| Skill | S | M | L | 触发条件 |
+|-------|---|---|---|---------|
+| `/review` | Y | Y | Y | 所有 PR 必跑 |
+| `/qa` | - | Y | Y | 有前端变更 |
+| `/design-review` | - | - | Y | 有 UI 变更 |
+| `/cso` | - | - | Y | 涉及 auth/安全 |
+| `/codex` | - | - | Y | L 级 PR |
+
+### Branch 规范
+
+<!-- CUSTOMIZE: 替换 <base-branch> 为你的基准开发分支（如 dev、develop、main） -->
+
+- 分支命名：`feat/<topic>` / `fix/<topic>` / `refactor/<topic>`
+- 基于 `<base-branch>` 创建，PR 目标 `<base-branch>`，禁止直推保护分支
+- PR 体量 <= 500 LOC，超过时拆分
+- Commit 规范：Conventional Commits（`feat:` / `fix:` / `test:` / `docs:` / `refactor:`）
+
+### Skill 触发条件
+
+<!-- CUSTOMIZE: 根据项目已安装的 gstack skills 调整 -->
+
+| 阶段 | Skill | 触发条件 |
+|------|-------|---------|
+| DESIGN | `/office-hours` | M/L 级进入 DESIGN |
+| DESIGN | `/plan-ceo-review` | L 级，design doc 产出后 |
+| PLAN | `planning-with-files-zh` | 所有规模 |
+| PLAN | `/plan-eng-review` | M/L 级 plan 生成后 |
+| PLAN | `/autoplan` | L 级 plan 生成后 |
+| BUILD | `/investigate` | 测试失败或遇到 bug |
+| SHIP | `/ship` + `/document-release` | 用户 approve PR 后 |
