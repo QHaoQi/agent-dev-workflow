@@ -52,11 +52,13 @@ INTAKE  →  DESIGN  →  PLAN  →  BUILD  →  SHIP
 
 ### 3.1 三级分类
 
-| 规模 | 判断标准 | 用户参与节点 | 预计 Agent 数量 |
-|------|---------|-------------|----------------|
-| **S (小)** | bug fix / < 100 LOC / 1-3 文件 / 单层（纯前端或纯后端） | 仅 approve PR | 1 |
-| **M (中)** | 单功能 / 100-500 LOC / 4-8 文件 / 前后端联动 | approve spec + approve PR | 2 |
-| **L (大)** | 多模块 / 500+ LOC / 8+ 文件 / 前后端 + DB + 测试 + 文档 | approve spec + approve plan + approve PR | 3 |
+| 规模 | 判断标准 | 用户参与节点 |
+|------|---------|-------------|
+| **S (小)** | bug fix / < 100 LOC / 1-3 文件 / 单层（纯前端或纯后端） | 仅 approve PR |
+| **M (中)** | 单功能 / 100-500 LOC / 4-8 文件 / 前后端联动 | approve spec + approve PR |
+| **L (大)** | 多模块 / 500+ LOC / 8+ 文件 / 前后端 + DB + 测试 + 文档 | approve spec + approve plan + approve PR |
+
+Agent 数量由 AI 根据 task 依赖图的可并行度自主决定（上限 4），不再按规模固定分配。
 
 ### 3.2 自动判断逻辑
 
@@ -225,9 +227,12 @@ Main Agent (用户对话窗口，不执行代码操作)
 ├─ implementer-frontend  ← 前端开发 agent，在同一 feature branch 上工作
 ├─ test-writer           ← 测试 agent，在同一 feature branch 上编写和运行测试
 │
-│  S 级：仅派 1 个 implementer（根据变更类型选 backend 或 frontend）
-│  M 级：派 2 个 agent（implementer-backend + implementer-frontend，或 implementer + test-writer）
-│  L 级：派 3 个 agent（implementer-backend + implementer-frontend + test-writer）
+│  Agent 数量由 AI 根据 task_plan.md 依赖图的可并行度自主决定（上限 4）：
+│  - 分析可并行的 task 组 → 按组数分配 Agent
+│  - 按涉及层级选角色（后端/前端 implementer、test-writer）
+│  - 所有 task 串行 → 1 个 Agent 即可
+│  - 仅 1 个 Agent → 不创建 Team，直接派发
+│  - 2+ 个 Agent → TeamCreate → TaskCreate → 派发
 │
 │  每个 agent 完成 task 后：
 │  ├─ 运行对应测试（单元/集成）验证

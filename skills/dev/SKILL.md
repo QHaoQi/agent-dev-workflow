@@ -217,33 +217,42 @@ git checkout -b feat/<topic>
 - 所有改动是否集中在同一功能模块
 - 如果超出 → 向用户报告并建议升级为 M 级，等待确认后再继续
 
-根据规模创建 Team 和分派 Agent：
+根据 `task_plan.md` 的任务依赖关系，AI 自主决定 Agent 数量和角色组合。
 
-#### S 级 — 单 Agent
+#### 决策规则
+
+1. **分析 task_plan.md 的依赖图**，识别可并行的 task 组。
+2. **按涉及层级选角色**（从 AGENTS.md 角色池中选取）：
+   - 仅后端变更 → 后端 implementer
+   - 仅前端变更 → 前端 implementer
+   - 前后端联动 → 后端 + 前端 implementer
+   - 测试量大且独立于业务开发 → 追加 test-writer
+3. **按可并行度定数量**：
+   - 所有 task 串行 → 1 个 Agent 即可
+   - 有 2+ 个独立 task 组可并行 → 按组数分配 Agent（每组 1 个对口角色）
+   - 避免 Agent 闲置：如果某角色只有 1-2 个小 task，合并到其他 Agent
+4. **上限：不超过 4 个 Agent**（超过后协调成本大于收益）。
+
+#### 编排示例
+
 ```
-不创建 Team，直接派发 1 个 Agent（根据变更类型选 implementer-backend 或 implementer-frontend）。
-Agent 在 feature branch 上完成所有 tasks。
+# 纯后端 bug fix — 1 Agent
+派发 1 个后端 implementer
+
+# 后端 API + 前端页面，互不依赖 — 2 Agents
+TeamCreate → 后端 implementer + 前端 implementer
+
+# 后端 + 前端 + 大量测试 — 3 Agents
+TeamCreate → 后端 implementer + 前端 implementer + test-writer
+
+# 多模块复杂任务 — 按依赖图拆，可能 2-4 Agents
+TeamCreate → 按实际 task 并行度决定
 ```
 
-#### M 级 — 2 Agents
-```
-TeamCreate("feature-<topic>")
-从 task_plan.md 解析 tasks → TaskCreate 逐个创建
-派发 2 个 Agent：
-  - implementer-backend：后端 tasks
-  - implementer-frontend：前端 tasks
-  （如果无前端变更，替换为 implementer-backend + test-writer）
-```
+#### 何时创建 Team
 
-#### L 级 — 3 Agents
-```
-TeamCreate("feature-<topic>")
-从 task_plan.md 解析 tasks → TaskCreate 逐个创建
-派发 3 个 Agent：
-  - implementer-backend：后端开发
-  - implementer-frontend：前端开发
-  - test-writer：测试编写和运行
-```
+- 仅 1 个 Agent → 不创建 Team，直接派发
+- 2+ 个 Agent → TeamCreate("feature-<topic>") → TaskCreate 逐个创建 → 派发 Agents
 
 ### 4.3 Agent 协作规则
 

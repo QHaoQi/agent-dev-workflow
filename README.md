@@ -73,16 +73,18 @@ INTAKE  →  DESIGN  →  PLAN  →  BUILD  →  SHIP
 | INTAKE | 自动分级 + 用户确认 | 同 S | 同 S |
 | DESIGN | 跳过 | `/office-hours` → 用户选方案 | `/office-hours` → `/plan-ceo-review` → 用户选方案 |
 | PLAN | 简单 plan，自动进入 BUILD | plan + `/plan-eng-review` → 用户审批 | 完整 plan + `/autoplan` → 用户审批 |
-| BUILD | 1 Agent，`/review` | 2 Agents，`/review` + `/qa` | 3 Agents，全量 review |
+| BUILD | Agent（按 task 依赖图），`/review` | Agent Team（按 task 依赖图），`/review` + `/qa` | Agent Team（按 task 依赖图），全量 review |
 | SHIP | `/ship` + `/document-release` | 同 S | 同 S + `/land-and-deploy` + `/canary` |
 
 ## S/M/L 分级规则
 
-| 规模 | 判断标准 | 用户审批节点 | Agent 数 |
-|------|---------|-------------|---------|
-| **S** | bug fix / < 100 LOC / 1-3 文件 / 单层 | approve PR | 1 |
-| **M** | 单功能 / 100-500 LOC / 前后端联动 | approve spec + PR | 2 |
-| **L** | 多模块 / 500+ LOC / 前后端 + DB + 测试 | approve spec + plan + PR | 3 |
+| 规模 | 判断标准 | 用户审批节点 |
+|------|---------|-------------|
+| **S** | bug fix / < 100 LOC / 1-3 文件 / 单层 | approve PR |
+| **M** | 单功能 / 100-500 LOC / 前后端联动 | approve spec + PR |
+| **L** | 多模块 / 500+ LOC / 前后端 + DB + 测试 | approve spec + plan + PR |
+
+Agent 数量由 AI 根据 task 依赖图的可并行度自主决定（上限 4），不再按规模固定分配。
 
 拿不准往大一级分。可用 `/dev -s`、`/dev -m`、`/dev -l` 强制指定。
 
